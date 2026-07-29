@@ -38,6 +38,7 @@ def backward(
 
     d_pred = (2 / m) * (pred - y)
 
+
     # input -> W1S -> A1S -> W2S -> A2S -> W3S -> A3S -> W4S -> A4S -> output
 
 
@@ -63,9 +64,7 @@ def backward(
     )
 
 
-
     dE2 = (dE3 @ model.W3.T) * leaky_relu_derivative(Z2)
-
 
     dW2 = A1.T @ dE2
 
@@ -78,16 +77,15 @@ def backward(
 
     dE1 = (dE2 @ model.W2.T) * leaky_relu_derivative(Z1)
 
-
-
     dW1 = X.T @ dE1
-
 
     db1 = np.sum(
         dE1,
         axis=0,
         keepdims=True
     )
+
+    
 
 
     return [

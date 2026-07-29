@@ -1,7 +1,7 @@
-import numpy as np
 import pandas as pd
+import numpy as np
 
-from utils.preprocess import preprocess
+from utils.preprocess import clean , scale , scaleX ,scaleY , realY 
 from model.neural_network import NeuralNetwork
 from trainer.trainer import train
 from diagnostics.diagnostics import report
@@ -14,19 +14,26 @@ df = pd.read_csv(
 )
 
 
-X, y, scaler, cdf = preprocess(df)
+X, y, data = clean(df)
 
 
-X_train, X_test, y_train, y_test, cdf_train, cdf_test = train_test_split(
+X_train, X_test, y_train, y_test ,cdf_train, cdf_test = train_test_split(
     X,
     y,
-    cdf,
-    test_size=0.1,
+    data,
+    test_size=0.01,
     random_state=42
 )
+# np.set_printoptions(
+#     threshold=50,
+#     precision=2,
+#     suppress=False
+# )
+# for value in y_test[0]:
+#     print(value)
 
 
-print()
+# print()
 
 print(
     "Train:",
@@ -38,63 +45,37 @@ print(
     X_test.shape
 )
 
+X_train , y_train = scale(X_train , y_train) 
 
 model = NeuralNetwork(
     input_size=X_train.shape[1]
 )
 
-
 train(
     model,
     X_train,
     y_train,
-    lr = 0.02,
-    epochs = 4000
-)
-
-
-Z1,A1,Z2,A2,Z3,A3,prediction = model.forward(
-    X_test
-)
-
-
-report(
-    model,
-    prediction,
-    y_test,
-    A1,
-    A2,
-    A3
+    lr = 0.01,
+    epochs = 10000
 )
 
 
 
 
-real_prediction = (
-    prediction
-    *
-    scaler["y_std"]
-    +
-    scaler["y_mean"]
-)
-
-
-real_y = (
-    y_test
-    *
-    scaler["y_std"]
-    +
-    scaler["y_mean"]
-)
-
-
-
-print(
-    "\n========== 10 TEST PREDICTIONS =========="
-)
-
+# # report(
+# #     model,
+# #     prediction,
+# #     y_test,
+# #     A1,
+# #     A2,
+# #     A3
+# # )
 
 for i in range(10):
+
+    Z1,A1,Z2,A2,Z3,A3,prediction = model.forward(
+    scaleX(X_test[i])
+)
 
     print()
 
@@ -103,52 +84,15 @@ for i in range(10):
         i
     )
 
-
-    print(
-        "Suburb:",
-        cdf_test.iloc[i]["Suburb"]
-    )
-
-
-    print(
-        "Type:",
-        cdf_test.iloc[i]["Type"]
-    )
-
-
-    print(
-        "Rooms:",
-        cdf_test.iloc[i]["Rooms"]
-    )
-
-
-    print(
-        "Distance:",
-        cdf_test.iloc[i]["Distance"]
-    )
-
-
-    print(
-        "Landsize:",
-        cdf_test.iloc[i]["Landsize"]
-    )
-
-
     print(
         "Predicted:",
-        round(
-            float(real_prediction[i][0]),
-            2
-        )
+        realY(prediction[0][0])
     )
 
 
     print(
         "Actual:",
-        round(
-            float(real_y[i][0]),
-            2
-        )
+        y_test[i][0]
     )
 
 
@@ -156,10 +100,12 @@ for i in range(10):
         "Difference:",
         round(
             abs(
-                float(real_prediction[i][0])
+                y_test[i][0]
                 -
-                float(real_y[i][0])
+                realY(prediction[0][0])
             ),
             2
         )
     )
+
+    print("-----------------------------------------------------------")
